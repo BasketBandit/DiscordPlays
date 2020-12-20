@@ -1,5 +1,5 @@
 <configuration>
-    <conversionRule conversionWord="higherlight" converterClass="com.yuuko.core.utilities.logback.HighlightingCompositeConverter"/>
+    <conversionRule conversionWord="higherlight" converterClass="com.basketbandit.utilities.HighlightingCompositeConverter"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
