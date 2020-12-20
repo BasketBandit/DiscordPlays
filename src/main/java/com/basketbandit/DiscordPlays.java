@@ -36,11 +36,15 @@ public class DiscordPlays implements EventListener {
         if(event instanceof ReadyEvent) {
             log.info("DiscordPlays is ready!");
         }
-        // 790239166478549003L
+
         if(event instanceof GuildMessageReceivedEvent) {
+            if(((GuildMessageReceivedEvent) event).getAuthor().isBot()) {
+                return; // no bots allowed :)
+            }
+
             GuildMessageReceivedEvent e = (GuildMessageReceivedEvent) event;
             if(e.getMessage().getContentRaw().equals("?setupController")) {
-                jda.getTextChannelById(controlChannel).sendMessage("Movement Control").queue(s -> {
+                jda.getTextChannelById(controlChannel).sendMessage("Movement").queue(s -> {
                     s.addReaction("⬅️").queue();
                     s.addReaction("⬆️").queue();
                     s.addReaction("➡️").queue();
@@ -51,7 +55,14 @@ public class DiscordPlays implements EventListener {
                     s.addReaction("↘️").queue();
                 });
 
-                jda.getTextChannelById(controlChannel).sendMessage("Action Control").queue(s -> {
+                jda.getTextChannelById(controlChannel).sendMessage("Advanced Movement").queue(s -> {
+                    s.addReaction("⏪").queue();
+                    s.addReaction("⏫").queue();
+                    s.addReaction("⏩").queue();
+                    s.addReaction("⏬").queue();
+                });
+
+                jda.getTextChannelById(controlChannel).sendMessage("Action ").queue(s -> {
                     s.addReaction("🅰️").queue();
                     s.addReaction("🅱️").queue();
                     s.addReaction("🇽").queue();
@@ -60,10 +71,10 @@ public class DiscordPlays implements EventListener {
                     s.addReaction("🇷").queue();
                 });
 
-                jda.getTextChannelById(controlChannel).sendMessage("Special Control").queue(s -> {
+                jda.getTextChannelById(controlChannel).sendMessage("Special").queue(s -> {
                     s.addReaction("⏸️").queue();
                     s.addReaction("⏯️").queue();
-                    s.addReaction("👍️").queue();
+                    s.addReaction("🔻").queue();
                     s.addReaction("⌛").queue();
                 });
             }
@@ -74,29 +85,29 @@ public class DiscordPlays implements EventListener {
             if(e.getChannel().getIdLong() == controlChannel) {
                 final String emote = e.getReactionEmote().getAsReactionCode();
                 switch(emote) {
-                    case "⬆️" -> {
-                        robot.keyPress(KeyEvent.VK_UP);
-                        robot.delay(100);
-                        robot.keyRelease(KeyEvent.VK_UP);
-                        log.info(e.getUser().getAsTag() + " | UP");
-                    }
-                    case "⬇️" -> {
-                        robot.keyPress(KeyEvent.VK_DOWN);
-                        robot.delay(100);
-                        robot.keyRelease(KeyEvent.VK_DOWN);
-                        log.info(e.getUser().getAsTag() + " | DOWN");
-                    }
                     case "⬅️" -> {
                         robot.keyPress(KeyEvent.VK_LEFT);
                         robot.delay(100);
                         robot.keyRelease(KeyEvent.VK_LEFT);
                         log.info(e.getUser().getAsTag() + " | LEFT");
                     }
+                    case "⬆️" -> {
+                        robot.keyPress(KeyEvent.VK_UP);
+                        robot.delay(100);
+                        robot.keyRelease(KeyEvent.VK_UP);
+                        log.info(e.getUser().getAsTag() + " | UP");
+                    }
                     case "➡️" -> {
                         robot.keyPress(KeyEvent.VK_RIGHT);
                         robot.delay(100);
                         robot.keyRelease(KeyEvent.VK_RIGHT);
                         log.info(e.getUser().getAsTag() + " | RIGHT");
+                    }
+                    case "⬇️" -> {
+                        robot.keyPress(KeyEvent.VK_DOWN);
+                        robot.delay(100);
+                        robot.keyRelease(KeyEvent.VK_DOWN);
+                        log.info(e.getUser().getAsTag() + " | DOWN");
                     }
                     case "↖️" -> {
                         robot.keyPress(KeyEvent.VK_Q);
@@ -121,6 +132,30 @@ public class DiscordPlays implements EventListener {
                         robot.delay(100);
                         robot.keyRelease(KeyEvent.VK_R);
                         log.info(e.getUser().getAsTag() + " | DOWN+LEFT");
+                    }
+                    case "⏪" -> {
+                        robot.keyPress(KeyEvent.VK_LEFT);
+                        robot.delay(1000);
+                        robot.keyRelease(KeyEvent.VK_LEFT);
+                        log.info(e.getUser().getAsTag() + " | LEFT (HOLD)");
+                    }
+                    case "⏫" -> {
+                        robot.keyPress(KeyEvent.VK_UP);
+                        robot.delay(1000);
+                        robot.keyRelease(KeyEvent.VK_UP);
+                        log.info(e.getUser().getAsTag() + " | UP (HOLD)");
+                    }
+                    case "⏩" -> {
+                        robot.keyPress(KeyEvent.VK_RIGHT);
+                        robot.delay(1000);
+                        robot.keyRelease(KeyEvent.VK_RIGHT);
+                        log.info(e.getUser().getAsTag() + " | RIGHT (HOLD)");
+                    }
+                    case "⏬" -> {
+                        robot.keyPress(KeyEvent.VK_DOWN);
+                        robot.delay(1000);
+                        robot.keyRelease(KeyEvent.VK_DOWN);
+                        log.info(e.getUser().getAsTag() + " | DOWN (HOLD)");
                     }
                     case "🇱" -> {
                         robot.keyPress(KeyEvent.VK_J);
@@ -170,7 +205,7 @@ public class DiscordPlays implements EventListener {
                         robot.keyRelease(KeyEvent.VK_H);
                         log.info(e.getUser().getAsTag() + " | SELECT");
                     }
-                    case "👍" -> {
+                    case "🔻" -> {
                         robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
                         robot.delay(5000);
                         robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
