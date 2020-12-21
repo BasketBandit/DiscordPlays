@@ -2,7 +2,9 @@
 
 'Twitch Plays' inspired application that allows discord servers to play together in a fun and quirky way.
 
-- Note: Application was designed with Nintendo GBA/DS systems in mind.
+- Note: Application was designed with Nintendo GBA/NDS systems in mind, more specifically using the Desmume emulator.
+
+## WARNING: Spamming reacts too fast will likely get you ratelimited!
 
 ## How to:
 
@@ -13,6 +15,8 @@
 - [Discord Bot Account](https://discord.com/developers/applications) (Token)
 
 ### Getting Started
+
+It is highly recommended you set up the bot in a text channel on its own for everything to work as expected.
 
 #### Setup
 1) Join bot account to the server of your choice.
