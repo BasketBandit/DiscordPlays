@@ -2,6 +2,8 @@ package com.basketbandit;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
@@ -22,13 +24,24 @@ public class DiscordPlays implements EventListener {
     private static final Logger log = LoggerFactory.getLogger(DiscordPlays.class);
     private static Robot robot;
     private static JDA jda;
-    private static Long controlChannel;
+    private static TextChannel controlChannel;
+    private static Message bHeldMessage;
+    private static boolean bHeld;
 
     public static void main(String[] args) throws LoginException, InterruptedException, AWTException {
         robot = new Robot();
         jda = JDABuilder.createDefault(args[0]).addEventListeners(new DiscordPlays()).build();
         jda.awaitReady();
-        controlChannel = Long.parseLong(args[1]);
+        if(args.length > 1) {
+            controlChannel = jda.getTextChannelById(Long.parseLong(args[1]));
+            log.info("Control channel set to: " + controlChannel.getAsMention());
+        }
+        if(args.length > 2) {
+            controlChannel.getHistoryFromBeginning(5).queue(s -> {
+                bHeldMessage = s.getRetrievedHistory().get(0);
+                log.info("B Held message set to: " + bHeldMessage.getId());
+            });
+        }
     }
 
     @Override
@@ -44,7 +57,7 @@ public class DiscordPlays implements EventListener {
 
             GuildMessageReceivedEvent e = (GuildMessageReceivedEvent) event;
             if(e.getMessage().getContentRaw().equals("?setupController")) {
-                jda.getTextChannelById(controlChannel).sendMessage("Movement").queue(s -> {
+                controlChannel.sendMessage("Movement").queue(s -> {
                     s.addReaction("⬅️").queue();
                     s.addReaction("⬆️").queue();
                     s.addReaction("➡️").queue();
@@ -55,34 +68,41 @@ public class DiscordPlays implements EventListener {
                     s.addReaction("↘️").queue();
                 });
 
-                jda.getTextChannelById(controlChannel).sendMessage("Advanced Movement").queue(s -> {
+                controlChannel.sendMessage("Advanced Movement").queue(s -> {
                     s.addReaction("⏪").queue();
                     s.addReaction("⏫").queue();
                     s.addReaction("⏩").queue();
                     s.addReaction("⏬").queue();
+                    s.addReaction("🅱️").queue();
                 });
 
-                jda.getTextChannelById(controlChannel).sendMessage("Action ").queue(s -> {
-                    s.addReaction("🅰️").queue();
-                    s.addReaction("🅱️").queue();
+                controlChannel.sendMessage("Action ").queue(s -> {
+                    s.addReaction("🇦").queue();
+                    s.addReaction("🇧").queue();
                     s.addReaction("🇽").queue();
                     s.addReaction("🇾").queue();
                     s.addReaction("🇱").queue();
                     s.addReaction("🇷").queue();
                 });
 
-                jda.getTextChannelById(controlChannel).sendMessage("Special").queue(s -> {
+                controlChannel.sendMessage("Special").queue(s -> {
                     s.addReaction("⏸️").queue();
                     s.addReaction("⏯️").queue();
                     s.addReaction("🔻").queue();
                     s.addReaction("⌛").queue();
                 });
+
+                controlChannel.sendMessage("🅱️ held: `" + bHeld + "`").queue(s -> bHeldMessage = s);
             }
         }
 
         if(event instanceof GuildMessageReactionAddEvent || event instanceof GuildMessageReactionRemoveEvent) {
+            if(((GenericGuildMessageReactionEvent) event).getUser().isBot()) {
+                return; // no bots allowed :)
+            }
+
             GenericGuildMessageReactionEvent e = (event instanceof GuildMessageReactionAddEvent) ? (GuildMessageReactionAddEvent) event : (GuildMessageReactionRemoveEvent) event;
-            if(e.getChannel().getIdLong() == controlChannel) {
+            if(e.getChannel() == controlChannel) {
                 final String emote = e.getReactionEmote().getAsReactionCode();
                 switch(emote) {
                     case "⬅️" -> {
@@ -157,6 +177,16 @@ public class DiscordPlays implements EventListener {
                         robot.keyRelease(KeyEvent.VK_DOWN);
                         log.info(e.getUser().getAsTag() + " | DOWN (HOLD)");
                     }
+                    case "🅱️" -> {
+                        bHeld = !bHeld;
+                        if(bHeld) {
+                            robot.keyPress(KeyEvent.VK_Z);
+                        } else {
+                            robot.keyRelease(KeyEvent.VK_Z);
+                        }
+                        bHeldMessage.editMessage("🅱️ held: `" + bHeld + "`").queue();
+                        log.info(e.getUser().getAsTag() + " | HOLD+B");
+                    }
                     case "🇱" -> {
                         robot.keyPress(KeyEvent.VK_J);
                         robot.delay(100);
@@ -169,16 +199,20 @@ public class DiscordPlays implements EventListener {
                         robot.keyRelease(KeyEvent.VK_K);
                         log.info(e.getUser().getAsTag() + " | R");
                     }
-                    case "🅰️" -> {
+                    case "🇦" -> {
                         robot.keyPress(KeyEvent.VK_X);
                         robot.delay(100);
                         robot.keyRelease(KeyEvent.VK_X);
                         log.info(e.getUser().getAsTag() + " | A");
                     }
-                    case "🅱️" -> {
+                    case "🇧" -> {
                         robot.keyPress(KeyEvent.VK_Z);
                         robot.delay(100);
                         robot.keyRelease(KeyEvent.VK_Z);
+                        if(bHeld) {
+                            bHeld = false;
+                            bHeldMessage.editMessage("🅱️ held: `" + bHeld + "`").queue();
+                        }
                         log.info(e.getUser().getAsTag() + " | B");
                     }
                     case "🇽" -> {
