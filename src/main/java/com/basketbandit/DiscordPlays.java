@@ -96,6 +96,7 @@ public class DiscordPlays implements EventListener {
                         out.println("bye bye :)");
                         break;
                     }
+                    out.println(inputLine);
                     executeInput(inputLine);
                 }
 
