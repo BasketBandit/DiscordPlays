@@ -1,6 +1,5 @@
 package com.basketbandit;
 
-import com.neovisionaries.ws.client.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Message;
@@ -89,15 +88,15 @@ public class DiscordPlays implements EventListener {
                 log.info("New socket client connected...");
                 out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8), true);
                 in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
+                out.println("Hey DiscordPlaysSocketClient-chan! :¬)");
 
                 String inputLine;
                 while((inputLine = in.readLine()) != null) {
                     if(".".equals(inputLine)) {
-                        out.println("bye");
+                        out.println("bye bye :)");
                         break;
                     }
                     executeInput(inputLine);
-                    out.println(inputLine);
                 }
 
                 in.close();
@@ -327,6 +326,80 @@ public class DiscordPlays implements EventListener {
                 robot.keyRelease(KeyEvent.VK_X);
                 robot.keyRelease(KeyEvent.VK_Z);
                 log.info("A+B");
+            }
+
+            // XInput Controller
+            case "DPAD_UP_TRUE" -> {
+                robot.keyPress(KeyEvent.VK_UP);
+            }
+            case "DPAD_UP_FALSE" -> {
+                robot.keyRelease(KeyEvent.VK_UP);
+            }
+            case "DPAD_LEFT_TRUE" -> {
+                robot.keyPress(KeyEvent.VK_LEFT);
+            }
+            case "DPAD_LEFT_FALSE" -> {
+                robot.keyRelease(KeyEvent.VK_LEFT);
+            }
+            case "DPAD_RIGHT_TRUE" -> {
+                robot.keyPress(KeyEvent.VK_RIGHT);
+            }
+            case "DPAD_RIGHT_FALSE" -> {
+                robot.keyRelease(KeyEvent.VK_RIGHT);
+            }
+            case "DPAD_DOWN_TRUE" -> {
+                robot.keyPress(KeyEvent.VK_DOWN);
+            }
+            case "DPAD_DOWN_FALSE" -> {
+                robot.keyRelease(KeyEvent.VK_DOWN);
+            }
+            case "A_TRUE" -> {
+                robot.keyPress(KeyEvent.VK_Z);
+            }
+            case "A_FALSE" -> {
+                robot.keyRelease(KeyEvent.VK_Z);
+            }
+            case "B_TRUE" -> {
+                robot.keyPress(KeyEvent.VK_X);
+            }
+            case "B_FALSE" -> {
+                robot.keyRelease(KeyEvent.VK_X);
+            }
+            case "X_TRUE" -> {
+                robot.keyPress(KeyEvent.VK_A);
+            }
+            case "X_FALSE" -> {
+                robot.keyRelease(KeyEvent.VK_A);
+            }
+            case "Y_TRUE" -> {
+                robot.keyPress(KeyEvent.VK_S);
+            }
+            case "Y_FALSE" -> {
+                robot.keyRelease(KeyEvent.VK_S);
+            }
+            case "LEFT_SHOULDER_TRUE" -> {
+                robot.keyPress(KeyEvent.VK_J);
+            }
+            case "LEFT_SHOULDER_FALSE" -> {
+                robot.keyRelease(KeyEvent.VK_J);
+            }
+            case "RIGHT_SHOULDER_TRUE" -> {
+                robot.keyPress(KeyEvent.VK_K);
+            }
+            case "RIGHT_SHOULDER_FALSE" -> {
+                robot.keyRelease(KeyEvent.VK_K);
+            }
+            case "START_TRUE" -> {
+                robot.keyPress(KeyEvent.VK_ENTER);
+            }
+            case "START_FALSE" -> {
+                robot.keyRelease(KeyEvent.VK_ENTER);
+            }
+            case "BACK_TRUE" -> {
+                robot.keyPress(KeyEvent.VK_H);
+            }
+            case "BACK_FALSE" -> {
+                robot.keyRelease(KeyEvent.VK_H);
             }
         }
     }
