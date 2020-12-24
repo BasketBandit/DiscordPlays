@@ -1,0 +1,7 @@
+# Discord
+discord_enabled: "false"
+bot_token: "" # get from https://discord.com/developers/applications
+control_channel_id: "" # 18-digit id (get from discord)
+# Socket Server
+socket_server_enabled: "true"
+socket_server_port: "3197" # need to port forward

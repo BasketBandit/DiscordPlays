@@ -5,119 +5,139 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GenericGuildMessageReactionEvent;
-import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
-import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 import java.awt.*;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 public class DiscordPlays implements EventListener {
     private static final Logger log = LoggerFactory.getLogger(DiscordPlays.class);
-    private static String[] argz;
     private static Robot robot;
+
+    // Discord Functionality
+    private static boolean discordEnabled;
     private static JDA jda;
+    private static String botToken;
+    private static String controlChannelId;
     private static TextChannel controlChannel;
-    private static Message bHeldMessage;
     private static boolean bHeld;
+
+    // Socket Server Functionality
+    private static boolean socketServerEnabled;
+    private static int serverSocketPort;
     private static ServerSocket serverSocket;
 
     public static void main(String[] args) {
-        argz = args;
         new DiscordPlays();
     }
 
     public DiscordPlays() {
+        try(InputStream inputStream = new FileInputStream("./config.yaml")) {
+            Map<String, String> config = new Yaml().load(inputStream);
+            discordEnabled = Boolean.parseBoolean(config.get("discord_enabled"));
+            botToken = config.get("bot_token");
+            controlChannelId = config.get("control_channel_id");
+            socketServerEnabled = Boolean.parseBoolean(config.get("socket_server_enabled"));
+            serverSocketPort = Integer.parseInt(config.get("socket_server_port"));
+        } catch(IOException e) {
+            log.error("There was an error loading the configuration file, message: {}", e.getMessage(), e);
+        }
+
         try {
             robot = new Robot();
         } catch(AWTException e) {
-            log.error("There was a problem setting up the robot... {}", e.getMessage(), e);
+            log.error("There was a problem setting up the robot, message: {}", e.getMessage());
         }
 
-        try {
-            jda = JDABuilder.createDefault(argz[0]).addEventListeners(this).build();
-            jda.awaitReady();
-
-            if(argz.length > 1) {
-                controlChannel = jda.getTextChannelById(Long.parseLong(argz[1]));
-                log.info("Control channel set to: " + controlChannel.getAsMention());
-            }
-            if(argz.length > 2) {
-                controlChannel.getHistoryFromBeginning(5).queue(s -> {
-                    bHeldMessage = s.getRetrievedHistory().get(0);
-                    log.info("B Held message set to: " + bHeldMessage.getId());
-                });
-            }
-        } catch(Exception e) {
-            log.error("There was a problem setting up JDA... {}", e.getMessage(), e);
+        if(discordEnabled) {
+            initDiscord();
         }
 
-        try {
-            log.info("Starting socket server on port 3197...");
-            serverSocket = new ServerSocket(3197);
-            while(true) {
-                new DiscordPlaysClientHandler(serverSocket.accept()).start();
-            }
-        } catch(IOException e) {
-            log.error("There was a problem with the socket server... {}", e.getMessage(), e);
+        if(socketServerEnabled) {
+            initSocketServer();
         }
     }
 
-    private static class DiscordPlaysClientHandler extends Thread {
-        private Socket clientSocket;
-        private PrintWriter out;
-        private BufferedReader in;
+    private void initDiscord() {
+        try {
+            jda = JDABuilder.createDefault(botToken).addEventListeners(this).build();
+            jda.awaitReady();
+            controlChannel = jda.getTextChannelById(Long.parseLong(controlChannelId));
+            log.info("Discord control channel set to: " + controlChannel.getAsMention());
+        } catch(Exception e) {
+            log.error("There was a problem with JDA, message: {}", e.getMessage());
+        }
+    }
 
-        public DiscordPlaysClientHandler(Socket socket) {
+    private void initSocketServer() {
+        try {
+            log.info("Starting socket server on port " + serverSocketPort);
+            serverSocket = new ServerSocket(serverSocketPort);
+            while(true) {
+                new DiscordPlaysSocketClientHandler(serverSocket.accept()).start();
+            }
+        } catch(IOException e) {
+            log.error("There was a problem with the socket server, message: {}", e.getMessage());
+        }
+    }
+
+    private static class DiscordPlaysSocketClientHandler extends Thread {
+        private final Socket clientSocket;
+
+        public DiscordPlaysSocketClientHandler(Socket socket) {
             this.clientSocket = socket;
         }
 
         public void run() {
             try {
-                log.info("New socket client connected...");
-                out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8), true);
-                in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
-                out.println("Hey DiscordPlaysSocketClient-chan! :¬)");
+                log.info(clientSocket.getInetAddress().getHostAddress() + "-chan connected! :D");
+                PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8), true);
+                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
+                out.println("Hey " + clientSocket.getInetAddress().getHostAddress() + "-chan! u/////u");
 
                 String inputLine;
                 while((inputLine = in.readLine()) != null) {
                     if(".".equals(inputLine)) {
-                        out.println("bye bye :)");
+                        out.println("bye bye! :)");
                         break;
                     }
-                    out.println(inputLine);
-                    executeInput(inputLine);
+                    out.println("Gotcha!");
+                    executeXInput(inputLine);
                 }
 
                 in.close();
                 out.close();
                 clientSocket.close();
-                log.info("New socket client disconnected...");
+                log.info(clientSocket.getInetAddress().getHostAddress() + "-chan disconnect! :(");
             } catch(Exception e) {
-                log.error("There was an error... {}", e.getMessage(), e);
+                log.error("There was an problem with the socket client, message: {}", e.getMessage());
             }
         }
     }
 
-    public void stop() throws IOException {
-        serverSocket.close();
-    }
-
     @Override
     public void onEvent(@NotNull GenericEvent event) {
-        if(event instanceof ReadyEvent) {
-            log.info("DiscordPlays is ready!");
+        if(event instanceof GenericGuildMessageReactionEvent) {
+            if(((GenericGuildMessageReactionEvent) event).getUser().isBot()) {
+                return; // no bots allowed :)
+            }
+
+            GenericGuildMessageReactionEvent e = (GenericGuildMessageReactionEvent) event;
+            if(e.getChannel() == controlChannel) {
+                executeInput(e);
+                return;
+            }
         }
 
         if(event instanceof GuildMessageReceivedEvent) {
@@ -161,246 +181,272 @@ public class DiscordPlays implements EventListener {
                     s.addReaction("🔻").queue();
                     s.addReaction("⌛").queue();
                 });
-
-                controlChannel.sendMessage("🅱️ held: `" + bHeld + "`").queue(s -> bHeldMessage = s);
-            }
-        }
-
-        if(event instanceof GuildMessageReactionAddEvent || event instanceof GuildMessageReactionRemoveEvent) {
-            if(((GenericGuildMessageReactionEvent) event).getUser().isBot()) {
-                return; // no bots allowed :)
-            }
-
-            GenericGuildMessageReactionEvent e = (event instanceof GuildMessageReactionAddEvent) ? (GuildMessageReactionAddEvent) event : (GuildMessageReactionRemoveEvent) event;
-            if(e.getChannel() == controlChannel) {
-                executeInput(e.getReactionEmote().getAsReactionCode());
             }
         }
     }
 
-    private static void executeInput(String input) {
+    /**
+     * Deals directly with input from XInputs (Xbox 360, PS4 [ds4windows])
+     * @param input String
+     */
+    private static void executeXInput(String input) {
         switch(input) {
-            case "⬅️" -> {
+            case "DPAD_UP_TRUE" : {
+                robot.keyPress(KeyEvent.VK_UP);
+                break;
+            }
+            case "DPAD_UP_FALSE" : {
+                robot.keyRelease(KeyEvent.VK_UP);
+                break;
+            }
+            case "DPAD_LEFT_TRUE" : {
+                robot.keyPress(KeyEvent.VK_LEFT);
+                break;
+            }
+            case "DPAD_LEFT_FALSE" : {
+                robot.keyRelease(KeyEvent.VK_LEFT);
+                break;
+            }
+            case "DPAD_RIGHT_TRUE" : {
+                robot.keyPress(KeyEvent.VK_RIGHT);
+                break;
+            }
+            case "DPAD_RIGHT_FALSE" : {
+                robot.keyRelease(KeyEvent.VK_RIGHT);
+                break;
+            }
+            case "DPAD_DOWN_TRUE" : {
+                robot.keyPress(KeyEvent.VK_DOWN);
+                break;
+            }
+            case "DPAD_DOWN_FALSE" : {
+                robot.keyRelease(KeyEvent.VK_DOWN);
+                break;
+            }
+            case "A_TRUE" : {
+                robot.keyPress(KeyEvent.VK_Z);
+                break;
+            }
+            case "A_FALSE" : {
+                robot.keyRelease(KeyEvent.VK_Z);
+                break;
+            }
+            case "B_TRUE" : {
+                robot.keyPress(KeyEvent.VK_X);
+                break;
+            }
+            case "B_FALSE" : {
+                robot.keyRelease(KeyEvent.VK_X);
+                break;
+            }
+            case "X_TRUE" : {
+                robot.keyPress(KeyEvent.VK_A);
+                break;
+            }
+            case "X_FALSE" : {
+                robot.keyRelease(KeyEvent.VK_A);
+                break;
+            }
+            case "Y_TRUE" : {
+                robot.keyPress(KeyEvent.VK_S);
+                break;
+            }
+            case "Y_FALSE" : {
+                robot.keyRelease(KeyEvent.VK_S);
+                break;
+            }
+            case "LEFT_SHOULDER_TRUE" : {
+                robot.keyPress(KeyEvent.VK_J);
+                break;
+            }
+            case "LEFT_SHOULDER_FALSE" : {
+                robot.keyRelease(KeyEvent.VK_J);
+                break;
+            }
+            case "RIGHT_SHOULDER_TRUE" : {
+                robot.keyPress(KeyEvent.VK_K);
+                break;
+            }
+            case "RIGHT_SHOULDER_FALSE" : {
+                robot.keyRelease(KeyEvent.VK_K);
+                break;
+            }
+            case "START_TRUE" : {
+                robot.keyPress(KeyEvent.VK_ENTER);
+                break;
+            }
+            case "START_FALSE" : {
+                robot.keyRelease(KeyEvent.VK_ENTER);
+                break;
+            }
+            case "BACK_TRUE" : {
+                robot.keyPress(KeyEvent.VK_H);
+                break;
+            }
+            case "BACK_FALSE" : {
+                robot.keyRelease(KeyEvent.VK_H);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Deals directly with input from Discord.
+     * @param e {@link GenericGuildMessageReactionEvent}
+     */
+    private static void executeInput(GenericGuildMessageReactionEvent e) {
+        switch(e.getReactionEmote().getAsReactionCode()) {
+            case "⬅️" : {
                 robot.keyPress(KeyEvent.VK_LEFT);
                 robot.delay(100);
                 robot.keyRelease(KeyEvent.VK_LEFT);
-                log.info("LEFT");
+                log.info(e.getUser().getAsTag() + " | LEFT");
+                break;
             }
-            case "⬆️" -> {
+            case "⬆️" : {
                 robot.keyPress(KeyEvent.VK_UP);
                 robot.delay(100);
                 robot.keyRelease(KeyEvent.VK_UP);
-                log.info("UP");
+                log.info(e.getUser().getAsTag() + " | UP");
+                break;
             }
-            case "➡️" -> {
+            case "➡️" : {
                 robot.keyPress(KeyEvent.VK_RIGHT);
                 robot.delay(100);
                 robot.keyRelease(KeyEvent.VK_RIGHT);
-                log.info("RIGHT");
+                log.info(e.getUser().getAsTag() + " | RIGHT");
+                break;
             }
-            case "⬇️" -> {
+            case "⬇️" : {
                 robot.keyPress(KeyEvent.VK_DOWN);
                 robot.delay(100);
                 robot.keyRelease(KeyEvent.VK_DOWN);
-                log.info("DOWN");
+                log.info(e.getUser().getAsTag() + " | DOWN");
+                break;
             }
-            case "↖️" -> {
+            case "↖️" : {
                 robot.keyPress(KeyEvent.VK_Q);
                 robot.delay(100);
                 robot.keyRelease(KeyEvent.VK_Q);
-                log.info("UP+LEFT");
+                log.info(e.getUser().getAsTag() + " | UP + LEFT");
+                break;
             }
-            case "↗️" -> {
+            case "↗️" : {
                 robot.keyPress(KeyEvent.VK_W);
                 robot.delay(100);
                 robot.keyRelease(KeyEvent.VK_W);
-                log.info("UP+RIGHT");
+                log.info(e.getUser().getAsTag() + " | UP + RIGHT");
+                break;
             }
-            case "↘️" -> {
+            case "↘️" : {
                 robot.keyPress(KeyEvent.VK_E);
                 robot.delay(100);
                 robot.keyRelease(KeyEvent.VK_E);
-                log.info("DOWN+RIGHT");
+                log.info(e.getUser().getAsTag() + " | DOWN + RIGHT");
+                break;
             }
-            case "↙️" -> {
+            case "↙️" : {
                 robot.keyPress(KeyEvent.VK_R);
                 robot.delay(100);
                 robot.keyRelease(KeyEvent.VK_R);
-                log.info("DOWN+LEFT");
+                log.info(e.getUser().getAsTag() + " | DOWN + LEFT");
+                break;
             }
-            case "⏪" -> {
+            case "⏪" : {
                 robot.keyPress(KeyEvent.VK_LEFT);
                 robot.delay(1000);
                 robot.keyRelease(KeyEvent.VK_LEFT);
-                log.info("LEFT (HOLD)");
+                log.info(e.getUser().getAsTag() + " | LEFT (1s)");
+                break;
             }
-            case "⏫" -> {
+            case "⏫" : {
                 robot.keyPress(KeyEvent.VK_UP);
                 robot.delay(1000);
                 robot.keyRelease(KeyEvent.VK_UP);
-                log.info("UP (HOLD)");
+                log.info(e.getUser().getAsTag() + " | UP (1s)");
+                break;
             }
-            case "⏩" -> {
+            case "⏩" : {
                 robot.keyPress(KeyEvent.VK_RIGHT);
                 robot.delay(1000);
                 robot.keyRelease(KeyEvent.VK_RIGHT);
-                log.info("RIGHT (HOLD)");
+                log.info(e.getUser().getAsTag() + " | RIGHT (1s)");
+                break;
             }
-            case "⏬" -> {
+            case "⏬" : {
                 robot.keyPress(KeyEvent.VK_DOWN);
                 robot.delay(1000);
                 robot.keyRelease(KeyEvent.VK_DOWN);
-                log.info("DOWN (HOLD)");
+                log.info(e.getUser().getAsTag() + " | DOWN (1s)");
+                break;
             }
-            case "🅱️" -> {
+            case "🅱️" : {
                 bHeld = !bHeld;
                 if(bHeld) {
                     robot.keyPress(KeyEvent.VK_Z);
                 } else {
                     robot.keyRelease(KeyEvent.VK_Z);
                 }
-                bHeldMessage.editMessage("🅱️ held: `" + bHeld + "`").queue();
-                log.info("HOLD+B");
+                log.info(e.getUser().getAsTag() + " | B (hold = " + bHeld + ")");
+                break;
             }
-            case "🇱" -> {
+            case "🇱" : {
                 robot.keyPress(KeyEvent.VK_J);
                 robot.delay(100);
                 robot.keyRelease(KeyEvent.VK_J);
-                log.info("L");
+                log.info(e.getUser().getAsTag() + " | L");
+                break;
             }
-            case "🇷" -> {
+            case "🇷" : {
                 robot.keyPress(KeyEvent.VK_K);
                 robot.delay(100);
                 robot.keyRelease(KeyEvent.VK_K);
-                log.info("R");
+                log.info(e.getUser().getAsTag() + " | R");
+                break;
             }
-            case "🇦" -> {
+            case "🇦" : {
                 robot.keyPress(KeyEvent.VK_X);
                 robot.delay(100);
                 robot.keyRelease(KeyEvent.VK_X);
-                log.info("A");
+                log.info(e.getUser().getAsTag() + " | A");
+                break;
             }
-            case "🇧" -> {
+            case "🇧" : {
                 robot.keyPress(KeyEvent.VK_Z);
                 robot.delay(100);
                 robot.keyRelease(KeyEvent.VK_Z);
                 if(bHeld) {
                     bHeld = false;
-                    bHeldMessage.editMessage("🅱️ held: `" + bHeld + "`").queue();
                 }
-                log.info("B");
-            }
-            case "🇽" -> {
+                log.info(e.getUser().getAsTag() + " | B");
+                break;}
+            case "🇽" : {
                 robot.keyPress(KeyEvent.VK_S);
                 robot.delay(100);
                 robot.keyRelease(KeyEvent.VK_S);
-                log.info("X");
+                log.info(e.getUser().getAsTag() + " | X");
+                break;
             }
-            case "🇾" -> {
+            case "🇾" : {
                 robot.keyPress(KeyEvent.VK_A);
                 robot.delay(100);
                 robot.keyRelease(KeyEvent.VK_A);
-                log.info("Y");
+                log.info(e.getUser().getAsTag() + " | Y");
+                break;
             }
-            case "⏸️" -> {
+            case "⏸️" : {
                 robot.keyPress(KeyEvent.VK_ENTER);
                 robot.delay(100);
                 robot.keyRelease(KeyEvent.VK_ENTER);
-                log.info("START");
+                log.info(e.getUser().getAsTag() + " | START");
+                break;
             }
-            case "⏯️" -> {
+            case "⏯️" : {
                 robot.keyPress(KeyEvent.VK_H);
                 robot.delay(100);
                 robot.keyRelease(KeyEvent.VK_H);
-                log.info("SELECT");
-            }
-            case "🔻" -> {
-                robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-                robot.delay(5000);
-                robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-                log.info("PRESS");
-            }
-            case "⌛" -> {
-                robot.keyPress(KeyEvent.VK_X);
-                robot.keyPress(KeyEvent.VK_Z);
-                robot.delay(100);
-                robot.keyRelease(KeyEvent.VK_X);
-                robot.keyRelease(KeyEvent.VK_Z);
-                log.info("A+B");
-            }
-
-            // XInput Controller
-            case "DPAD_UP_TRUE" -> {
-                robot.keyPress(KeyEvent.VK_UP);
-            }
-            case "DPAD_UP_FALSE" -> {
-                robot.keyRelease(KeyEvent.VK_UP);
-            }
-            case "DPAD_LEFT_TRUE" -> {
-                robot.keyPress(KeyEvent.VK_LEFT);
-            }
-            case "DPAD_LEFT_FALSE" -> {
-                robot.keyRelease(KeyEvent.VK_LEFT);
-            }
-            case "DPAD_RIGHT_TRUE" -> {
-                robot.keyPress(KeyEvent.VK_RIGHT);
-            }
-            case "DPAD_RIGHT_FALSE" -> {
-                robot.keyRelease(KeyEvent.VK_RIGHT);
-            }
-            case "DPAD_DOWN_TRUE" -> {
-                robot.keyPress(KeyEvent.VK_DOWN);
-            }
-            case "DPAD_DOWN_FALSE" -> {
-                robot.keyRelease(KeyEvent.VK_DOWN);
-            }
-            case "A_TRUE" -> {
-                robot.keyPress(KeyEvent.VK_Z);
-            }
-            case "A_FALSE" -> {
-                robot.keyRelease(KeyEvent.VK_Z);
-            }
-            case "B_TRUE" -> {
-                robot.keyPress(KeyEvent.VK_X);
-            }
-            case "B_FALSE" -> {
-                robot.keyRelease(KeyEvent.VK_X);
-            }
-            case "X_TRUE" -> {
-                robot.keyPress(KeyEvent.VK_A);
-            }
-            case "X_FALSE" -> {
-                robot.keyRelease(KeyEvent.VK_A);
-            }
-            case "Y_TRUE" -> {
-                robot.keyPress(KeyEvent.VK_S);
-            }
-            case "Y_FALSE" -> {
-                robot.keyRelease(KeyEvent.VK_S);
-            }
-            case "LEFT_SHOULDER_TRUE" -> {
-                robot.keyPress(KeyEvent.VK_J);
-            }
-            case "LEFT_SHOULDER_FALSE" -> {
-                robot.keyRelease(KeyEvent.VK_J);
-            }
-            case "RIGHT_SHOULDER_TRUE" -> {
-                robot.keyPress(KeyEvent.VK_K);
-            }
-            case "RIGHT_SHOULDER_FALSE" -> {
-                robot.keyRelease(KeyEvent.VK_K);
-            }
-            case "START_TRUE" -> {
-                robot.keyPress(KeyEvent.VK_ENTER);
-            }
-            case "START_FALSE" -> {
-                robot.keyRelease(KeyEvent.VK_ENTER);
-            }
-            case "BACK_TRUE" -> {
-                robot.keyPress(KeyEvent.VK_H);
-            }
-            case "BACK_FALSE" -> {
-                robot.keyRelease(KeyEvent.VK_H);
+                log.info(e.getUser().getAsTag() + " | SELECT");
+                break;
             }
         }
     }
