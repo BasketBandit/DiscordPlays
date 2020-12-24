@@ -94,9 +94,11 @@ public class DiscordPlays implements EventListener {
 
     private static class DiscordPlaysSocketClientHandler extends Thread {
         private final Socket clientSocket;
+        private final String hostAddress;
 
         public DiscordPlaysSocketClientHandler(Socket socket) {
             this.clientSocket = socket;
+            this.hostAddress = clientSocket.getInetAddress().getHostAddress();
         }
 
         public void run() {
@@ -113,7 +115,7 @@ public class DiscordPlays implements EventListener {
                         break;
                     }
                     out.println("Gotcha!");
-                    executeXInput(inputLine);
+                    executeXInput(hostAddress, inputLine);
                 }
 
                 in.close();
@@ -189,10 +191,11 @@ public class DiscordPlays implements EventListener {
      * Deals directly with input from XInputs (Xbox 360, PS4 [ds4windows])
      * @param input String
      */
-    private static void executeXInput(String input) {
+    private static void executeXInput(String hostAddress, String input) {
         switch(input) {
             case "DPAD_UP_TRUE" : {
                 robot.keyPress(KeyEvent.VK_UP);
+                log.info(hostAddress + " | UP");
                 break;
             }
             case "DPAD_UP_FALSE" : {
@@ -201,6 +204,7 @@ public class DiscordPlays implements EventListener {
             }
             case "DPAD_LEFT_TRUE" : {
                 robot.keyPress(KeyEvent.VK_LEFT);
+                log.info(hostAddress + " | LEFT");
                 break;
             }
             case "DPAD_LEFT_FALSE" : {
@@ -209,6 +213,7 @@ public class DiscordPlays implements EventListener {
             }
             case "DPAD_RIGHT_TRUE" : {
                 robot.keyPress(KeyEvent.VK_RIGHT);
+                log.info(hostAddress + " | RIGHT");
                 break;
             }
             case "DPAD_RIGHT_FALSE" : {
@@ -217,6 +222,7 @@ public class DiscordPlays implements EventListener {
             }
             case "DPAD_DOWN_TRUE" : {
                 robot.keyPress(KeyEvent.VK_DOWN);
+                log.info(hostAddress + " | DOWN");
                 break;
             }
             case "DPAD_DOWN_FALSE" : {
@@ -225,6 +231,7 @@ public class DiscordPlays implements EventListener {
             }
             case "A_TRUE" : {
                 robot.keyPress(KeyEvent.VK_Z);
+                log.info(hostAddress + " | B");
                 break;
             }
             case "A_FALSE" : {
@@ -233,6 +240,7 @@ public class DiscordPlays implements EventListener {
             }
             case "B_TRUE" : {
                 robot.keyPress(KeyEvent.VK_X);
+                log.info(hostAddress + " | A");
                 break;
             }
             case "B_FALSE" : {
@@ -241,6 +249,7 @@ public class DiscordPlays implements EventListener {
             }
             case "X_TRUE" : {
                 robot.keyPress(KeyEvent.VK_A);
+                log.info(hostAddress + " | Y");
                 break;
             }
             case "X_FALSE" : {
@@ -249,6 +258,7 @@ public class DiscordPlays implements EventListener {
             }
             case "Y_TRUE" : {
                 robot.keyPress(KeyEvent.VK_S);
+                log.info(hostAddress + " | X");
                 break;
             }
             case "Y_FALSE" : {
@@ -257,6 +267,7 @@ public class DiscordPlays implements EventListener {
             }
             case "LEFT_SHOULDER_TRUE" : {
                 robot.keyPress(KeyEvent.VK_J);
+                log.info(hostAddress + " | L");
                 break;
             }
             case "LEFT_SHOULDER_FALSE" : {
@@ -265,6 +276,7 @@ public class DiscordPlays implements EventListener {
             }
             case "RIGHT_SHOULDER_TRUE" : {
                 robot.keyPress(KeyEvent.VK_K);
+                log.info(hostAddress + " | R");
                 break;
             }
             case "RIGHT_SHOULDER_FALSE" : {
@@ -273,6 +285,7 @@ public class DiscordPlays implements EventListener {
             }
             case "START_TRUE" : {
                 robot.keyPress(KeyEvent.VK_ENTER);
+                log.info(hostAddress + " | START");
                 break;
             }
             case "START_FALSE" : {
@@ -281,6 +294,7 @@ public class DiscordPlays implements EventListener {
             }
             case "BACK_TRUE" : {
                 robot.keyPress(KeyEvent.VK_H);
+                log.info(hostAddress + " | SELECT");
                 break;
             }
             case "BACK_FALSE" : {
