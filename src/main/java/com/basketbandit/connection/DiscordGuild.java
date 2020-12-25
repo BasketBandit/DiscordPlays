@@ -15,7 +15,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 
 public class DiscordGuild implements EventListener {
-    private static final Logger log = LoggerFactory.getLogger(SocketServer.class);
+    private static final Logger log = LoggerFactory.getLogger(DiscordGuild.class);
     private static JDA jda;
     private static TextChannel controlChannel;
     private Robot robot;
