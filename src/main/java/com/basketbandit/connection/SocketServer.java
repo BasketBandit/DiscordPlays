@@ -101,7 +101,14 @@ public class SocketServer extends Thread {
                 out.close();
                 clientSocket.close();
             } catch(Exception e) {
-                log.error("There was an problem with the socket client, message: {}", e.getMessage(), e);
+                log.warn("There was a problem with client from address '{}' ({}), message: {}", clientAddress, clientNickname, e.getMessage());
+                if(e.getMessage().equals("Connection reset")) {
+                    if(socketClients.remove(this)) {
+                        log.info("Client from address '{}' ({}) was successfully disconnected", clientAddress, clientNickname);
+                        return;
+                    }
+                    log.error("Unable to disconnect client from address '{}', nickname '{}' locked", clientAddress, clientNickname);
+                }
             }
         }
 
