@@ -10,7 +10,7 @@
 
 ### Prerequisites
 
-- [Java 15+](https://jdk.java.net/15/)
+- [Java 8+](https://jdk.java.net/8/)
 - [Discord Server](https://discord.com/) (Channel Id)
 - [Discord Bot Account](https://discord.com/developers/applications) (Token)
 
