@@ -15,6 +15,7 @@ import java.util.Scanner;
 public class DiscordPlays {
     private static final Logger log = LoggerFactory.getLogger(DiscordPlays.class);
 
+    private static Map<String, Object> config;
     private SocketServer socketServer;
     private DiscordGuild discordGuild;
 
@@ -24,16 +25,16 @@ public class DiscordPlays {
 
     public DiscordPlays() {
         try(InputStream inputStream = new FileInputStream("./config.yaml")) {
-            Map<String, String> config = new Yaml().load(inputStream);
+            config = new Yaml().load(inputStream);
 
-            if(Boolean.parseBoolean(config.get("socket_server_enabled"))) {
-                this.socketServer = new SocketServer(Integer.parseInt(config.get("socket_server_port")));
+            if((boolean)config.get("socket_server_enabled")) {
+                this.socketServer = new SocketServer((int)config.get("socket_server_port"));
                 this.socketServer.setName("Socket Server Thread");
                 this.socketServer.start();
             }
 
-            if(Boolean.parseBoolean(config.get("discord_enabled"))) {
-                this.discordGuild = new DiscordGuild(config.get("bot_token"), config.get("control_channel_id"));
+            if((boolean)config.get("discord_enabled")) {
+                this.discordGuild = new DiscordGuild((String)config.get("bot_token"), (String)config.get("control_channel_id"));
             }
 
             Scanner sc = new Scanner(System.in);
@@ -46,6 +47,10 @@ public class DiscordPlays {
         } catch(IOException e) {
             log.error("There was an error loading the configuration file, message: {}", e.getMessage(), e);
         }
+    }
+
+    public static Map<String, Object> getConfig() {
+        return config;
     }
 
     public void shutdown() {

@@ -1,7 +1,61 @@
 # Discord
-discord_enabled: "false"
-bot_token: "" # get from https://discord.com/developers/applications
-control_channel_id: "" # 18-digit id (get from discord)
+discord_enabled: false # (boolean)
+bot_token: "" # (string) get from https://discord.com/developers/applications
+control_channel_id: "" # (string) 18-digit id (get from discord)
 # Socket Server
-socket_server_enabled: "true"
-socket_server_port: "3197" # need to port forward
+socket_server_enabled: true # (boolean)
+socket_server_port: 3197 # (int) need to port forward
+# Player Binds (don't use " or ', please)
+player_bind:
+  p1:
+    up: 'W'
+    left: 'A'
+    right: 'S'
+    down: 'D'
+    a: 'X'
+    b: 'Z'
+    x: 'V'
+    y: 'C'
+    l: 'Q'
+    r: 'E'
+    start: 'R'
+    select: 'F'
+  p2:
+    up: 'Y'
+    left: 'G'
+    right: 'J'
+    down: 'H'
+    a: 'N'
+    b: 'B'
+    x: 'P'
+    y: 'L'
+    l: 'T'
+    r: 'U'
+    start: 'R'
+    select: 'F'
+  p3:
+    up: '1'
+    left: '2'
+    right: '3'
+    down: '4'
+    a: '5'
+    b: '6'
+    x: '7'
+    y: '8'
+    l: '9'
+    r: '0'
+    start: 'R'
+    select: 'F'
+  p4:
+    up: 'M'
+    left: 'O'
+    right: 'K'
+    down: 'I'
+    a: '\'
+    b: '/'
+    x: '['
+    y: ']'
+    l: '.'
+    r: ','
+    start: 'R'
+    select: 'F'

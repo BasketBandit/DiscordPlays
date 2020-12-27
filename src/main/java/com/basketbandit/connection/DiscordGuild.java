@@ -31,7 +31,7 @@ public class DiscordGuild implements EventListener {
         try {
             jda = JDABuilder.createDefault(botToken).addEventListeners(this).build();
             jda.awaitReady();
-            controlChannel = jda.getTextChannelById(Long.parseLong(controlChannelId));
+            controlChannel = jda.getTextChannelById(controlChannelId);
             log.info("Discord control channel set to: " + controlChannel.getAsMention());
         } catch(Exception e) {
             log.error("There was a problem with JDA, message: {}", e.getMessage());
