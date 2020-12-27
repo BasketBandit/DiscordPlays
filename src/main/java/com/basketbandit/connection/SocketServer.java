@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -53,6 +54,7 @@ public class SocketServer extends Thread {
         private final Socket clientSocket;
         private final String clientAddress;
         private String clientNickname;
+        private boolean greeted = false;
         private boolean bHeld; // client-based bheld state. (risky?)
 
         public SocketClient(Socket socket) {
@@ -68,6 +70,7 @@ public class SocketServer extends Thread {
 
                 String inputLine;
                 while((inputLine = in.readLine()) != null) {
+                    // Client socket identification signal
                     if(inputLine.startsWith("@")) {
                         final String input = inputLine.substring(1, Math.min(inputLine.length(), 31));
                         if(socketClients.stream().noneMatch(socketClient -> socketClient.clientNickname.equals(input))) {
@@ -80,10 +83,23 @@ public class SocketServer extends Thread {
                         out.println("'" + input + "' is already in use, please choose another nickname!");
                         break;
                     }
+
+                    // Client socket greeting signal
                     if(inputLine.startsWith("H-hi")) {
                         out.println("Hey " + clientNickname + "-chan! u/////u");
+                        greeted = true;
                         continue;
                     }
+
+                    // Client socket greeting check
+                    if(!greeted) {
+                        socketClients.remove(socketClients.stream().filter(client -> client.clientNickname.equals(clientNickname)).findFirst().get());
+                        out.println(">:(");
+                        log.warn("Client from address '{}' ({}) was disconnected for not following greeting protocol", clientAddress, clientNickname);
+                        break;
+                    }
+
+                    // Client socket shutdown signal
                     if(inputLine.equals(".")) {
                         socketClients.remove(socketClients.stream().filter(client -> client.clientNickname.equals(clientNickname)).findFirst().get());
                         out.println("Bye bye " + clientNickname + "-chan!");
@@ -91,9 +107,16 @@ public class SocketServer extends Thread {
                         break;
                     }
 
-                    String[] playerInput = inputLine.split(":");
+                    // Execute meta-commands (function keys for save-states)
+                    if(inputLine.startsWith("STATE")) {
+                        out.println(executeState(clientNickname, inputLine.split("#")[1]) ? "Gotcha!" : "Unknown Input :(");
+                        continue;
+                    }
+
+                    // Execute regular command
+                    String[] playerInput = inputLine.split("#");
                     if(playerInput.length > 1) {
-                        out.println(executeWSInput(clientNickname, Integer.parseInt(playerInput[0]), playerInput[1]) ? "Gotcha!" : "Unknown :(");
+                        out.println(executeWSInput(clientNickname, Integer.parseInt(playerInput[0]), playerInput[1]) ? "Gotcha!" : "Unknown Input :(");
                     }
                 }
 
@@ -110,6 +133,60 @@ public class SocketServer extends Thread {
                     log.error("Unable to disconnect client from address '{}', nickname '{}' locked", clientAddress, clientNickname);
                 }
             }
+        }
+
+        private boolean executeState(String clientNickname, String input) {
+            switch(input) {
+                case "S1": {
+                    robot.keyPress(KeyEvent.VK_SHIFT);
+                    robot.keyPress(KeyEvent.VK_F1);
+                    robot.delay(100);
+                    robot.keyRelease(KeyEvent.VK_SHIFT);
+                    robot.keyRelease(KeyEvent.VK_F1);
+                    log.info(clientNickname + " | SAVED TO SLOT 1");
+                    return true;
+                }
+                case "L1": {
+                    robot.keyPress(KeyEvent.VK_F1);
+                    robot.delay(100);
+                    robot.keyRelease(KeyEvent.VK_F1);
+                    log.info(clientNickname + " | LOADED SLOT 1");
+                    return true;
+                }
+                case "S2": {
+                    robot.keyPress(KeyEvent.VK_SHIFT);
+                    robot.keyPress(KeyEvent.VK_F2);
+                    robot.delay(100);
+                    robot.keyRelease(KeyEvent.VK_SHIFT);
+                    robot.keyRelease(KeyEvent.VK_F2);
+                    log.info(clientNickname + " | SAVED TO SLOT 2");
+                    return true;
+                }
+                case "L2": {
+                    robot.keyPress(KeyEvent.VK_F2);
+                    robot.delay(100);
+                    robot.keyRelease(KeyEvent.VK_F2);
+                    log.info(clientNickname + " | LOADED SLOT 1");
+                    return true;
+                }
+                case "S3": {
+                    robot.keyPress(KeyEvent.VK_SHIFT);
+                    robot.keyPress(KeyEvent.VK_F3);
+                    robot.delay(100);
+                    robot.keyRelease(KeyEvent.VK_SHIFT);
+                    robot.keyRelease(KeyEvent.VK_F3);
+                    log.info(clientNickname + " | SAVED TO SLOT 3");
+                    return true;
+                }
+                case "L3": {
+                    robot.keyPress(KeyEvent.VK_F3);
+                    robot.delay(100);
+                    robot.keyRelease(KeyEvent.VK_F3);
+                    log.info(clientNickname + " | LOADED SLOT 1");
+                    return true;
+                }
+            }
+            return false;
         }
 
         /**
