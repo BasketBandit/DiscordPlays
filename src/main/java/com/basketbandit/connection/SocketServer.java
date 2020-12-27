@@ -236,39 +236,39 @@ public class SocketServer extends Thread {
                             return true;
                         }
                         case "A_TRUE": {
-                            robot.keyPress(keys.get("a").charAt(0));
+                            robot.keyPress(keys.get("b").charAt(0));
                             log.info(clientNickname + " | P" + player + " | B");
                             return true;
                         }
                         case "A_FALSE": {
-                            robot.keyRelease(keys.get("a").charAt(0));
+                            robot.keyRelease(keys.get("b").charAt(0));
                             return true;
                         }
                         case "B_TRUE": {
-                            robot.keyPress(keys.get("b").charAt(0));
+                            robot.keyPress(keys.get("a").charAt(0));
                             log.info(clientNickname + " | P" + player + " | A");
                             return true;
                         }
                         case "B_FALSE": {
-                            robot.keyRelease(keys.get("b").charAt(0));
+                            robot.keyRelease(keys.get("a").charAt(0));
                             return true;
                         }
                         case "X_TRUE": {
-                            robot.keyPress(keys.get("x").charAt(0));
+                            robot.keyPress(keys.get("y").charAt(0));
                             log.info(clientNickname + " | P" + player + " | Y");
                             return true;
                         }
                         case "X_FALSE": {
-                            robot.keyRelease(keys.get("x").charAt(0));
+                            robot.keyRelease(keys.get("y").charAt(0));
                             return true;
                         }
                         case "Y_TRUE": {
-                            robot.keyPress(keys.get("y").charAt(0));
+                            robot.keyPress(keys.get("x").charAt(0));
                             log.info(clientNickname + " | P" + player + " | X");
                             return true;
                         }
                         case "Y_FALSE": {
-                            robot.keyRelease(keys.get("y").charAt(0));
+                            robot.keyRelease(keys.get("x").charAt(0));
                             return true;
                         }
                         case "LEFT_SHOULDER_TRUE": {
